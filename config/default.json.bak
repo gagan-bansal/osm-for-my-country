@@ -1,0 +1,32 @@
+{
+  "osm": {
+     "host": "http://download.geofabrik.de"
+  },
+  "data": {
+    "dir": "data"
+  },
+  "map": {
+    "boundaryTolerance": 0.001,
+    "cartoDir": "openstreetmap-carto",
+    "cartoStyle": "openstreetmap-carto.style" 
+  },
+  "export": {
+    "tileServer": "http://127:0.0.1:6789/openstreetmap-carto/tile",
+    "dir": "map-tiles",
+    "tileList": "final-tile-list.txt"
+  },
+  "tileServer": {
+    "dir": "map-tiles",
+    "port": 4040  
+  },
+  "demo": {
+    "dir": "demo",
+    "port": 4141,
+    "width": 600,
+    "height": 400
+  },
+  "HASH_MEMORY": 2000,
+  "NUM_PROCESS": 2
+}
+
+

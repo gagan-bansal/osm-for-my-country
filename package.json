@@ -1,0 +1,32 @@
+{
+  "name": "osm-for-my-country",
+  "version": "1.0.0",
+  "description": "Create OSM map for my country",
+  "main": "init-osm-country.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "preinstall": "npm i geojson2poly osmtogeojson simplify-geojson osm-tile-list -g"
+  },
+  "keywords": [
+    "OSM"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.1.1",
+    "concat-files": "^0.1.0",
+    "config": "^1.21.0",
+    "geojson-bbox": "0.0.0",
+    "geojson2poly": "0.0.2",
+    "http-server": "^0.9.0",
+    "mkdirp": "^0.5.1",
+    "nconf": "^0.8.4",
+    "osm-tile-list": "0.0.7",
+    "osmtogeojson": "^2.2.12",
+    "request": "^2.75.0",
+    "requestretry": "^1.12.0",
+    "simplify-geojson": "^1.0.3",
+    "sphericalmercator": "^1.0.5",
+    "yargs": "^6.0.0"
+  }
+}

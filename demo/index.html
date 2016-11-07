@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  
+  <title>Quick Start - Leaflet</title>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+
+
+  
+</head>
+<body>
+
+
+
+<div id="map" style="width: 600px; height: 400px;"></div>
+<script type="text/javascript" src="./view.js"></script>
+<script>
+
+  // set up the map
+  map = new L.Map('map');
+
+  // create the tile layer with correct attribution
+  var osmUrl = window.location.protocol + '//'
+    + window.location.hostname + ':' + tilesPort + '/{z}/{x}/{y}.png';
+  var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+  var osm = new L.TileLayer(osmUrl, {minZoom: 0, maxZoom: 19, attribution: osmAttrib});   
+
+  // start the map in South-East England
+  map.setView(new L.LatLng(view.center[1], view.center[0]),view.zoom);
+  map.addLayer(osm);
+</script>
+
+
+
+</body>
+</html>
+
