@@ -1,4 +1,4 @@
-!//bin/bash
+#!//bin/bash
 echo "Installing postgres and postgis"
 #if python -mplatform | grep -qi ubuntu; then
 #fi
