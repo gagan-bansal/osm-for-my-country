@@ -11,13 +11,12 @@ fi
 if python -mplatform | grep -qi ubuntu; then
   sudo apt-get update
   #sudo apt-get install postgresql-9.5-postgis-2.2 pgadmin3 postgresql-contrib-9.5
-  sudo apt-get install python -y
   sudo apt-get install gcc -y
   sudo apt-get install zlib1g-dev -y
   sudo apt-get install unzip -y
   sudo apt-get install git -y
   
-  sudo apt-get install postgresql postgresql-contrib
+  sudo apt-get install -y postgresql postgresql-contrib
   sudo apt-get install -y postgis postgresql-9.5-postgis-2.2
 fi
 
@@ -43,7 +42,7 @@ chmod 0600 ~/.pgpass
 
 echo "installing osm2pgsql ..."
 if python -mplatform | grep -qi ubuntu; then
-  sudo apt-get install osm2pgsql
+  sudo apt-get install osm2pgsql -y
 fi
 
 if python -mplatform | grep -qi centos; then
