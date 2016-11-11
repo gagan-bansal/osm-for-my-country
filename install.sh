@@ -10,7 +10,14 @@ fi
 if python -mplatform | grep -qi ubuntu; then
   sudo apt-get update
   #sudo apt-get install postgresql-9.5-postgis-2.2 pgadmin3 postgresql-contrib-9.5
+  sudo apt-get install python -y
+  sudo apt-get install gcc -y
+  sudo apt-get install zlib1g-dev -y
+  sudo apt-get install unzip -y
+  sudo apt-get install git -y
+  
   sudo apt-get install postgresql postgresql-contrib
+  sudo apt-get install -y postgis postgresql-9.5-postgis-2.2
 fi
 
 # https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-centos-7
@@ -23,7 +30,6 @@ if python -mplatform | grep -qi centos; then
   sudo systemctl enable postgresql
 fi
 
-sudo -u postgres bash -c "psql -c \"CREATE USER $USER WITH PASSWORD 'pgpass';\""
 sudo -u postgres bash -c "psql -c \"CREATE EXTENSION adminpack;\""
 sudo -u postgres bash -c "psql -c \"CREATE USER $USER WITH PASSWORD 'pgpass';\""
 sudo -u postgres bash -c "psql -c \"CREATE DATABASE gis;\""
