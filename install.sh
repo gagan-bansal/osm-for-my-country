@@ -1,3 +1,4 @@
+!//bin/bash
 echo "Installing postgres and postgis"
 #if python -mplatform | grep -qi ubuntu; then
 #fi
@@ -59,7 +60,8 @@ wget -O - http://m.m.i24.cc/osmfilter.c |cc -x c - -O3 -o osmfilter
 
 echo "Installing nvm ..."
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.4/install.sh | bash
-source ~/.bashrc
+export NVM_DIR="/home/$USER/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 echo "Installing node.js ..."
 nvm install 4.4.7
 echo "Installing pm2 ..."
