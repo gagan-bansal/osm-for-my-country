@@ -93,5 +93,8 @@ cp Noto-hinted/*otf Noto-hinted/*ttf ~/.fonts
 fc-cache -f -v
 echo "fonts installed"
 
+echo "Install project dependent node.js packages"
+npm install
+echo "Dependent packages installed"
 source ~/.bashrc
 echo "[myosm] Installation completed. Please logout and open again the terminal."
