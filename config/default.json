@@ -19,7 +19,7 @@
     "dir": "kosmtik"
   },
   "export": {
-    "tileServer": "http://127:0.0.1:6789/openstreetmap-carto/tile",
+    "tileServerURL": "http://127.0.0.1:6789/openstreetmap-carto/tile",
     "dir": "map-tiles",
     "tileList": "final-tile-list.txt"
   },
@@ -33,6 +33,6 @@
     "width": 600,
     "height": 400
   },
-  "HASH_MEMORY": 2000,
-  "NUM_PROCESS": 2
+  "HASH_MEMORY": 7000,
+  "NUM_PROCESS": 4
 }

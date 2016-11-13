@@ -1,0 +1,22 @@
+[
+  {
+    "where": "center",
+    "then": [
+      0,
+      0,
+      4
+    ]
+  },
+  {
+    "where": "Layer",
+    "if": {
+      "Datasource.type": "postgis"
+    },
+    "then": {
+      "Datasource.dbname": "gis",
+      "Datasource.user": "gaganb",
+      "Datasource.pgpass": "pgpass",
+      "Datasource.host": "localhost"
+    }
+  }
+]

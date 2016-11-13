@@ -1,5 +1,4 @@
 var async = require('async')
-var config = require('config')
 var exec = require('child_process').exec
 var spawn = require('child_process').spawn
 var execFile = require('child_process').execFile
@@ -26,8 +25,8 @@ var yargs = require('yargs')
   .command('start-kosmtik', 
     'Start kosmtik server with mapnik as map rendering engine')
   .command('export', 'Export map tiles')
-  .command('demo', 'Privew map tiles with help of Leaflet')
   .command('serve', 'Serve map tiles at http port')
+  .command('demo', 'Privew map tiles with help of Leaflet')
   .demand(1, 'must provide a valid command')
 var argv= yargs.argv
 var command = argv._[0] 
@@ -59,7 +58,6 @@ if (command === 'init') {
     .help('h')
     .alias('h', 'help')
   
-  debugger
   if (yargs.argv.region) {
     nconf.set('osm:region', yargs.argv.region)
   }
@@ -107,7 +105,6 @@ if (command === 'init') {
   if (yargs.argv.t) nconf.set('export:tileList', argv.t)
   if (yargs.argv.o) nconf.set('export:dir', argv.o)  
   
-   
   var url = nconf.get('export').tileServerURL
   var tileList = path.resolve(nconf.get('data').dir,nconf.get('export').tileList)
   var dir = path.resolve(nconf.get('export').dir)
@@ -128,7 +125,7 @@ if (command === 'init') {
   if (yargs.argv.save) {
     nconf.save(function (err) {
       fs.readFile('./config/default.json', function (err, data) {
-        console.dir(JSON.parse(data.toString()))
+        //console.dir(JSON.parse(data.toString()))
         console.log('Command options saved to following config file'
           + './config/default.json')
       })

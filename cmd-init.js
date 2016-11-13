@@ -4,15 +4,18 @@ var spawn = require('child_process').spawn
 var execFile = require('child_process').execFile
 var path = require('path')
 var fs = require('fs')
+var mkdirp = require('mkdirp')
 var SphericalMercator = require('sphericalmercator')
 var geojsonBbox = require('geojson-bbox')
 var concat = require('concat-files')
+var username = require('username')
 var g = {}
 var config;
 
 module.exports = function(nconf) {
   config = nconf
   async.series([
+    createDirs,
     parseRegion,
     downloadMyCountryData,
     pbf2osm,
@@ -27,12 +30,24 @@ module.exports = function(nconf) {
     osm2pgsql,
     createWorldTileList,
     createMyCountryTileList,
-    mergeTilesList
+    mergeTilesList,
+    setKosmtikConfig
   ], function(err, result) {
     if (err) throw err
     console.log('all async function over')
   })
 }
+
+function createDirs(callback) {
+  var confFile = config.stores.file.store
+  Object.keys(confFile).forEach(function(key) {
+    if (confFile[key].dir) mkdirp.sync(confFile[key].dir, function(err) {
+      if (err) callback(err)
+    })
+  })
+  callback()
+}
+
 function parseRegion(callback) {
   console.log('init ...')
   debugger
@@ -45,15 +60,15 @@ function parseRegion(callback) {
   g.name = config.get('osm').region.split(',').pop().trim().replace(/ +/g,' ')
   callback()
 }
-  
+
 function downloadMyCountryData(callback) {
   console.log('downloadCountryData ...')
-  var url = config.get('osm:host') + '/' 
+  var url = config.get('osm:host') + '/'
     + config.get('osm').region.split(',')
       .map(function(part) {
         return part.toLowerCase().trim().replace(/ +/g, '-')
       })
-      .join('/') 
+      .join('/')
     + '-latest.osm.pbf'
   console.log('downloading region data: '+ url)
   var curl = 'echo '
@@ -67,7 +82,7 @@ function downloadMyCountryData(callback) {
     + ' -o my-area.osm.pbf `'  // closed tilde at the end
   console.log('curl: '+ curl)
   exec(
-    curl, 
+    curl,
     {cwd: path.resolve(config.get('data:dir'))},
     function(err, stdout, stderr) {
       if (err) throw err
@@ -94,16 +109,16 @@ function pbf2osm(callback) {
   execFile(cmd, [
     '--hash-memory=' +config.get('HASH_MEMORY'),
     input,
-    '--out-osm', '-o=' + output 
-  ], 
+    '--out-osm', '-o=' + output
+  ],
   {}, function(err, stdout, stderr) {
     if (err) callback(err)
-    if (stderr) { 
+    if (stderr) {
       console.log(stderr)
-      callback(stderr) 
+      callback(stderr)
     } else {
-      callback(stderr) 
-      console.log(stdout) 
+      callback(stderr)
+      console.log(stdout)
     }
   })
 }
@@ -119,7 +134,7 @@ function dropCountriesBorder(callback) {
     input,
     '--drop="admin_level=2"',
     '--out-osm', '-o=' + output
-  ], 
+  ],
   handleExec.bind({callback: callback}))
 
 }
@@ -139,14 +154,14 @@ function downloadCountriesBorder(callback) {
     + ' -o countries-border.osm `'  // closed tilde at the end
   console.log('curl overpass: '+ curl)
   exec(
-    curl, 
+    curl,
     {cwd: path.resolve(config.get('data:dir'))},
     function(err, stdout, stderr) {
       if (err) callback(err)
       console.log(stdout)
       if (stderr) {
         callback(stderr)
-      } else if (stdout < 400) { 
+      } else if (stdout < 400) {
         console.log('downloaded coutries borders')
         callback(null)
       } else {
@@ -158,9 +173,9 @@ function downloadCountriesBorder(callback) {
 
 function downloadMyCountryBorder(callback) {
   console.log('downloading my country border data with overpass api..')
-  var apiData =  
+  var apiData =
     'relation["admin_level"="'+ config.get('osm').region.split(',').length +'"] '
-    + '["name:en"="'+g.name + '"];' 
+    + '["name:en"="'+g.name + '"];'
     + '(._;>;);'
     + ' out body;'
   var curl = 'echo '
@@ -175,7 +190,7 @@ function downloadMyCountryBorder(callback) {
     + ' http://overpass-api.de/api/interpreter'
     + ' -o my-area-border.osm `'  // closed tilde at the end
   console.log('curl my country overpass: '+ curl)
-  exec(curl, 
+  exec(curl,
     {cwd: path.resolve(config.get('data:dir'))},
     function(err, stdout, stderr) {
       if (err) callback(err)
@@ -216,8 +231,8 @@ function simplifyGeoJSON(callback) {
     'my-area-border.geojson')
   var output = path.resolve(config.get('data:dir'),
     'my-area-border-simplified.geojson')
-  var simplify = cmd 
-    + ' ' + input 
+  var simplify = cmd
+    + ' ' + input
     + ' --tolerance ' + config.get('map:boundaryTolerance')
     + ' > ' + output
   console.log(simplify)
@@ -236,22 +251,43 @@ function writeInitView(callback) {
   debugger
     var reproject = new SphericalMercator()
     var bounds = reproject.convert(geojsonBbox(JSON.parse(data)),'900913')
-    var width =  bounds[2] - bounds[0] 
+    var width =  bounds[2] - bounds[0]
     var height = bounds[3] - bounds[1]
     var center = [bounds[0] + width/2, bounds[1] + height/2]
-    var res = width > height ? 
+    var res = width > height ?
       width/config.get('demo').width : height/config.get('demo').height
     var zoom = getNearestZoom(res)
     var view = '// center [long,lat] \n var view = { zoom: ' + zoom + ','
       + 'center: [' + reproject.inverse(center) + ']}'
-      + '\nvar tilesPort = '+ config.get('tileServer:port')  
+      + '\nvar tilesPort = '+ config.get('tileServer:port')
     var viewFile = path.resolve(config.get('demo').dir, 'view.js')
     fs.writeFile(viewFile, view, function(err) {
       if (err) callback(err)
       console.log('view file saved')
       callback()
     })
-     
+  })
+}
+
+function setKosmtikConfig(callback) {
+  username().then(function(name) {
+    var kosmticConfFile = './config/kosmtik-localconfig.json'
+    fs.readFile(kosmticConfFile,'utf8', function(err,data) {
+        debugger
+      if (err) callback(err)
+      var conf = JSON.parse(data)
+      var ind = conf.findIndex(function(item) {
+        return item && item.if && item.if['Datasource.type']
+          && item.if['Datasource.type'] === 'postgis' && item.then
+          && item.then['Datasource.user']
+      })
+      conf[ind].then['Datasource.user'] = name
+      fs.writeFile(kosmticConfFile, JSON.stringify(conf,null,2), function(err) {
+        if (err) callback(err)
+        console.log('Kosmtik config file saved')
+        callback()
+      })
+    })
   })
 }
 
@@ -276,41 +312,41 @@ function geojson2poly(callback) {
 }
 
 function mergeOSMData(callback) {
-  var input1 = path.resolve(config.get('data:dir'), 
+  var input1 = path.resolve(config.get('data:dir'),
     'my-area-dropped-countries.osm')
-  var input2 = path.resolve(config.get('data:dir'), 
+  var input2 = path.resolve(config.get('data:dir'),
     'countries-border.osm')
-  var outFile = path.resolve(config.get('data:dir'), 
+  var outFile = path.resolve(config.get('data:dir'),
     'my-area-final-data.osm')
 
   execFile('./osmconvert', [
     '--hash-memory=' +config.get('HASH_MEMORY'),
     input1, input2,
     '--out-osm', '-o='+ outFile
-  ], 
-  {}, 
+  ],
+  {},
   handleExec.bind({callback: callback}))
 }
 
 function osm2pgsql(callback) {
-  var input = path.resolve(config.get('data:dir'), 
+  var input = path.resolve(config.get('data:dir'),
     'my-area-final-data.osm')
   var style = path.resolve(config.get('map:cartoDir'),
     config.get('map:cartoStyle'))
   console.log('osm2pgsql running ...')
   /*console.log('osm2pgsql'
-    + ' --create --slim --cache ' + config.get('HASH_MEMORY') 
+    + ' --create --slim --cache ' + config.get('HASH_MEMORY')
     + ' --number-processes ' + config.get('NUM_PROCESS')
     + ' --hstore'
     + ' --style ' + style
     + ' ' + input)*/
   execFile('osm2pgsql', [
-    '--create', '--slim', '--cache', config.get('HASH_MEMORY'), 
+    '--create', '--slim', '--cache', config.get('HASH_MEMORY'),
     '--number-processes', config.get('NUM_PROCESS'),
     '--hstore',
     '--style', style,
     input
-  ], 
+  ],
   {},
   function (err,stderr, stdout) {
     if (err) {
@@ -318,11 +354,11 @@ function osm2pgsql(callback) {
       callback(err)
     }
 
-    console.log(stdout) 
+    console.log(stdout)
     console.log(stderr)
     console.log('done')
-    callback() 
-    
+    callback()
+
   })
 }
 
@@ -331,12 +367,12 @@ function createWorldTileList(callback) {
   var worldBound = path.resolve('./world-bound.geojson')
   var outFileStream = fs.createWriteStream(
     path.resolve(config.get('data:dir'), 'world-tile-list.txt'))
-  var list = spawn('./node_modules/.bin/osm-tile-list', 
+  var list = spawn('./node_modules/.bin/osm-tile-list',
     [
       '--minZoom', '0',
       '--maxZoom', '5',
       '--tileBuffer', '3',
-      '--only-corners', 'true', 
+      '--only-corners', 'true',
       worldBound,
     ], {cwd: path.resolve('.') }
   )
@@ -348,7 +384,7 @@ function createWorldTileList(callback) {
     callback(data)
   })
   list.stdout.on('data', function(data) {
-    outFileStream.write(data) 
+    outFileStream.write(data)
   })
   list.on('close', function(code) {
     outFileStream.close()
@@ -358,15 +394,16 @@ function createWorldTileList(callback) {
 
 function createMyCountryTileList(callback) {
   console.log('createMyCountryTileList running ...')
-  var countryBound = path.resolve(config.get('data:dir'), 
+  var countryBound = path.resolve(config.get('data:dir'),
     'my-area-border-simplified.geojson')
   var outFileStream = fs.createWriteStream(
     path.resolve(config.get('data:dir'), 'my-area-tile-list.txt'))
-  var list = spawn('./node_modules/.bin/osm-tile-list', 
+  var list = spawn('./node_modules/.bin/osm-tile-list',
     [
       '--minZoom', '6',
       '--maxZoom', '15',
-      '--only-corners', 'true', 
+      '--tileBuffer', '3',
+      '--only-corners', 'true',
       countryBound,
     ], {cwd: path.resolve('.') }
   )
@@ -378,7 +415,7 @@ function createMyCountryTileList(callback) {
     callback(data)
   })
   list.stdout.on('data', function(data) {
-    outFileStream.write(data) 
+    outFileStream.write(data)
   })
   list.on('close', function(code) {
     outFileStream.close()
@@ -395,7 +432,7 @@ function mergeTilesList(callback) {
     console.log('merged files')
   })
   /*execFile('cat', [
-    worldList, myAreaList, 
+    worldList, myAreaList,
     ' > ', mergeList],
     handleExec.bind({callback: callback}))*/
 }
@@ -407,12 +444,12 @@ function handleExec(err, stdout, stderr) {
     throw err //callback(err)
   }
   if (stderr) {
-    console.log('some error in running programm') 
+    console.log('some error in running programm')
     console.log(stderr)
-    this.callback(stderr) 
+    this.callback(stderr)
   } else {
-    console.log(stdout) 
+    console.log(stdout)
     console.log('done')
-    this.callback(stderr) 
+    this.callback(stderr)
   }
 }

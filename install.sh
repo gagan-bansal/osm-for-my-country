@@ -91,6 +91,7 @@ unzip Noto-hinted.zip -d Noto-hinted
 mkdir -p ~/.fonts
 cp Noto-hinted/*otf Noto-hinted/*ttf ~/.fonts
 fc-cache -f -v
+rm Noto-hinted.zip
 echo "fonts installed"
 
 echo "Install project dependent node.js packages"
@@ -98,3 +99,5 @@ npm install
 echo "Dependent packages installed"
 source ~/.bashrc
 echo "[myosm] Installation completed. Please logout and open again the terminal."
+echo "    or run "
+echo "    source ~/.bashrc"

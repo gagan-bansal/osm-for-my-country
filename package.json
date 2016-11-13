@@ -15,7 +15,6 @@
   "dependencies": {
     "async": "^2.1.1",
     "concat-files": "^0.1.0",
-    "config": "^1.21.0",
     "geojson-bbox": "0.0.0",
     "geojson2poly": "0.0.2",
     "http-server": "^0.9.0",
@@ -27,6 +26,7 @@
     "requestretry": "^1.12.0",
     "simplify-geojson": "^1.0.3",
     "sphericalmercator": "^1.0.5",
+    "username": "^2.2.2",
     "yargs": "^6.0.0"
   }
 }
