@@ -4,8 +4,7 @@
   "description": "Create OSM map for my country",
   "main": "init-osm-country.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "preinstall": "npm i geojson2poly osmtogeojson simplify-geojson osm-tile-list -g"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "OSM"

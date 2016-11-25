@@ -9,12 +9,12 @@ var kosmtik = require('./cmd-start-kosmtik.js')
 var exportTiles = require('./cmd-export-tiles.js') 
 var serve = require('./cmd-serve.js') 
 var demo = require('./cmd-demo.js') 
+//var update = require('./cmd-update.js') 
 var g = {}
 
 var nconf = require('nconf')
   .argv()
   .file({file: './config/default.json'})
-console.log('\nUsing config file: \'./config/default.json\'\n')
 
 var yargs = require('yargs')
   .usage('\nUsage: node $0 command')
@@ -27,6 +27,7 @@ var yargs = require('yargs')
   .command('export', 'Export map tiles')
   .command('serve', 'Serve map tiles at http port')
   .command('demo', 'Privew map tiles with help of Leaflet')
+  .command('update', 'Update the OSM data and map tiles based on daily update.')
   .demand(1, 'must provide a valid command')
 var argv= yargs.argv
 var command = argv._[0] 
@@ -118,9 +119,13 @@ if (command === 'init') {
   serve(nconf)
 } else if (command === 'demo') {
   demo(nconf)
+} else if (command === 'update') {
+  //update(nconf)
 } else {
   yargs.showHelp()
 }
+
+console.log('\nUsing config file: \'./config/default.json\'\n')
 
   if (yargs.argv.save) {
     nconf.save(function (err) {

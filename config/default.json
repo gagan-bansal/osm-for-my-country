@@ -1,7 +1,6 @@
 {
   "osm": {
-    "host": "http://download.geofabrik.de",
-    "region": "Asia, Sri Lanka"
+    "host": "http://download.geofabrik.de"
   },
   "data": {
     "dir": "data"
