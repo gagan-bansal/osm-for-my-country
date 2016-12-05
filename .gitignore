@@ -3,6 +3,7 @@ data
 demo/view.js
 kosmtik
 log
+*.log
 map-tiles
 openstreetmap-carto
 osmconvert

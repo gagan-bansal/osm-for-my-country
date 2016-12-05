@@ -69,7 +69,7 @@ echo "Installing http-server ..."
 npm install http-server -g
 
 echo "Installing kosmtik ..."
-git clone https://github.com/kosmtik/kosmtik.git
+git clone --branch 0.0.13 https://github.com/kosmtik/kosmtik.git
 cd kosmtik
 # as mapnik ^3.5.13 is using GLIBCXX_3.4.20 or above
 # check the OS version by `strings /lib64/libstdc++.so.6 | grep 'GLIBCXX'`
@@ -80,7 +80,7 @@ cd -
 sudo ln -s $PWD/kosmtik/node_modules/mapnik/lib/binding/node-v46-linux-x64/shapeindex /usr/bin/shapeindex
 
 echo "Installing openstreetmap-carto ..."
-git clone https://github.com/gravitystorm/openstreetmap-carto.git
+git clone --branch v2.45.1 https://github.com/gravitystorm/openstreetmap-carto.git
 cd openstreetmap-carto
 sh get-shapefiles.sh
 cd -

@@ -3,6 +3,7 @@ var exec = require('child_process').exec
 var spawn = require('child_process').spawn
 var execFile = require('child_process').execFile
 var path = require('path')
+var os = require('os')
 var fs = require('fs')
 var mkdirp = require('mkdirp')
 var SphericalMercator = require('sphericalmercator')
@@ -107,7 +108,7 @@ function pbf2osm(callback) {
   var output = path.resolve(config.get('data:dir'),
     'my-area.osm')
   execFile(cmd, [
-    '--hash-memory=' +config.get('HASH_MEMORY'),
+    '--hash-memory=' + parseInt(os.totalmem()*0.75/1000000),
     input,
     '--out-osm', '-o=' + output
   ],
@@ -215,7 +216,7 @@ function osm2geojson(callback) {
   var output = path.resolve(config.get('data:dir'),
     'my-area-border.geojson')
   exec('node '
-     + ' --max_old_space_size=' + config.get('HASH_MEMORY')
+     + ' --max_old_space_size=' + parseInt(os.totalmem()*0.75/1000000)
      + ' ' + cmd
      + ' ' + input
      + ' > ' + output
@@ -320,7 +321,7 @@ function mergeOSMData(callback) {
     'my-area-final-data.osm')
 
   execFile('./osmconvert', [
-    '--hash-memory=' +config.get('HASH_MEMORY'),
+    '--hash-memory=' + parseInt(os.totalmem()*0.75/1000000),
     input1, input2,
     '--out-osm', '-o='+ outFile
   ],
@@ -334,31 +335,33 @@ function osm2pgsql(callback) {
   var style = path.resolve(config.get('map:cartoDir'),
     config.get('map:cartoStyle'))
   console.log('osm2pgsql running ...')
-  /*console.log('osm2pgsql'
-    + ' --create --slim --cache ' + config.get('HASH_MEMORY')
-    + ' --number-processes ' + config.get('NUM_PROCESS')
-    + ' --hstore'
-    + ' --style ' + style
-    + ' ' + input)*/
-  execFile('osm2pgsql', [
-    '--create', '--slim', '--cache', config.get('HASH_MEMORY'),
-    '--number-processes', config.get('NUM_PROCESS'),
+  console.log(['osm2pgsql', 
+    '--create', '--slim', '--cache', parseInt(os.totalmem()*0.75/1000000),
+    '--number-processes', os.cpus().length,
     '--hstore',
     '--style', style,
-    input
-  ],
-  {},
-  function (err,stderr, stdout) {
-    if (err) {
-      console.log('some error in osm2pgsql')
-      callback(err)
-    }
-
-    console.log(stdout)
-    console.log(stderr)
-    console.log('done')
-    callback()
-
+    input,
+    '&> /dev/null'].join(' '))
+  var cmd = spawn('osm2pgsql', [
+    '--create', '--slim', '--cache', parseInt(os.totalmem()*0.75/1000000),
+    '--number-processes', os.cpus().length,
+    '--hstore',
+    '--style', style,
+    input 
+  ])
+  cmd.on('error', function(err) {
+    throw err
+  })
+  cmd.stderr.on('data', function(data) {
+    console.error('Error: ' + data)
+    //callback(data) //as osm2pgsql logging stdout as stderr
+  })
+  cmd.stdout.on('data', function(data) {
+    outFileStream.write(data)
+  })
+  cmd.on('close', function(code) {
+    console.log('osm2pgsql completed')
+    callback(null)
   })
 }
 
@@ -367,7 +370,7 @@ function createWorldTileList(callback) {
   var worldBound = path.resolve('./world-bound.geojson')
   var outFileStream = fs.createWriteStream(
     path.resolve(config.get('data:dir'), 'world-tile-list.txt'))
-  var list = spawn('./node_modules/.bin/osm-tile-list',
+  var cmd = spawn('./node_modules/.bin/osm-tile-list',
     [
       '--minZoom', '0',
       '--maxZoom', '5',
@@ -376,17 +379,17 @@ function createWorldTileList(callback) {
       worldBound,
     ], {cwd: path.resolve('.') }
   )
-  list.on('error', function(err) {
+  cmd.on('error', function(err) {
     throw err
   })
-  list.stderr.on('data', function(data) {
+  cmd.stderr.on('data', function(data) {
     console.error('Error: ' + data)
     callback(data)
   })
-  list.stdout.on('data', function(data) {
+  cmd.stdout.on('data', function(data) {
     outFileStream.write(data)
   })
-  list.on('close', function(code) {
+  cmd.on('close', function(code) {
     outFileStream.close()
     callback(null)
   })
@@ -398,7 +401,7 @@ function createMyCountryTileList(callback) {
     'my-area-border-simplified.geojson')
   var outFileStream = fs.createWriteStream(
     path.resolve(config.get('data:dir'), 'my-area-tile-list.txt'))
-  var list = spawn('./node_modules/.bin/osm-tile-list',
+  var cmd = spawn('./node_modules/.bin/osm-tile-list',
     [
       '--minZoom', '6',
       '--maxZoom', '15',
@@ -407,17 +410,17 @@ function createMyCountryTileList(callback) {
       countryBound,
     ], {cwd: path.resolve('.') }
   )
-  list.on('error', function(err) {
+  cmd.on('error', function(err) {
     callback(err)
   })
-  list.stderr.on('data', function(data) {
+  cmd.stderr.on('data', function(data) {
     console.error('Error: ' + data)
     callback(data)
   })
-  list.stdout.on('data', function(data) {
+  cmd.stdout.on('data', function(data) {
     outFileStream.write(data)
   })
-  list.on('close', function(code) {
+  cmd.on('close', function(code) {
     outFileStream.close()
     callback(null)
   })
@@ -428,13 +431,11 @@ function mergeTilesList(callback) {
   var myAreaList = path.resolve(config.get('data:dir'),
     'my-area-tile-list.txt')
   var mergeList = path.resolve(config.get('data:dir'), 'final-tile-list.txt')
-  concat([worldList, myAreaList], mergeList, function() {
+  concat([worldList, myAreaList], mergeList, function(err, res) {
+    if (err) callback(err)
     console.log('merged files')
+    callback()
   })
-  /*execFile('cat', [
-    worldList, myAreaList,
-    ' > ', mergeList],
-    handleExec.bind({callback: callback}))*/
 }
 
 function handleExec(err, stdout, stderr) {

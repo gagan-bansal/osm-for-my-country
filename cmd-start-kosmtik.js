@@ -12,7 +12,8 @@ module.exports = function(nconf) {
     '--error', path.resolve(nconf.get('log:dir'), 'kosmtik-error.log'),
     '--', 'serve',
     path.resolve(nconf.get('map:cartoDir'),nconf.get('map:cartoProject')),
-    '--localconfig', './config/kosmtik-localconfig.json'
+    '--localconfig', './config/kosmtik-localconfig.json',
+    '--host', '0.0.0.0'
   ].join(' ')
   console.log('[start-kosmtik] ' + cmd)
   exec(cmd, function(err, stdout, stderr) {
