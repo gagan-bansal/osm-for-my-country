@@ -10,6 +10,7 @@ var SphericalMercator = require('sphericalmercator')
 var geojsonBbox = require('geojson-bbox')
 var concat = require('concat-files')
 var username = require('username')
+var requestretry = require('requestretry')
 var g = {}
 var config;
 
@@ -19,6 +20,7 @@ module.exports = function(nconf) {
     createDirs,
     parseRegion,
     downloadMyCountryData,
+    writeCurState,
     pbf2osm,
     dropCountriesBorder,
     downloadCountriesBorder,
@@ -94,10 +96,52 @@ function downloadMyCountryData(callback) {
       if (stdout < 400) {
         callback(null)
       } else {
-        callback(null)
+        callback(stdout)
       }
     }
   )
+}
+
+function writeCurState(callback) {
+  console.log('Writing current state of data ...')
+  var url = config.get('osm:host') + '/'
+    + config.get('osm').region.split(',')
+      .map(function(part) {
+        return part.toLowerCase().trim().replace(/ +/g, '-')
+      })
+      .join('/')
+    + '-updates/state.txt'
+  console.log('Current state: '+ url)
+  requestretry({
+    url: url,
+    maxAttempts: 10,
+    retryDelay: 10000,
+    retryStrategy: requestretry.RetryStrategies.HTTPOrNetworkError
+  },
+    function(err, resp, body) {
+      if (err) throw err;
+      if (!err && resp.statusCode == 200) {
+        console.log('The number of request attempts: ' + resp.attempts)
+        var seq;
+        body.split('\n').forEach(function(line) {
+          if (line.indexOf('sequenceNumber') >= 0) {
+            var rec = line.split('=')
+            seq = parseInt(rec[1].trim())
+          }
+        })
+        if (seq && !isNaN(seq)) {
+          var seqFile = path.resolve(config.get('data:dir'),'seq-number.json')
+          fs.writeFile(seqFile, JSON.stringify({sequenceNumber: seq}),
+            function(err) {
+              if (err) callback(err)
+              callback()
+            }
+          )
+      } else {
+        console.log('Error: Could not write sequence number')
+      }
+    }
+  })
 }
 
 function pbf2osm(callback) {
@@ -335,7 +379,7 @@ function osm2pgsql(callback) {
   var style = path.resolve(config.get('map:cartoDir'),
     config.get('map:cartoStyle'))
   console.log('osm2pgsql running ...')
-  console.log(['osm2pgsql', 
+  console.log(['osm2pgsql',
     '--create', '--slim', '--cache', parseInt(os.totalmem()*0.75/1000000),
     '--number-processes', os.cpus().length,
     '--hstore',
@@ -347,7 +391,7 @@ function osm2pgsql(callback) {
     '--number-processes', os.cpus().length,
     '--hstore',
     '--style', style,
-    input 
+    input
   ])
   cmd.on('error', function(err) {
     throw err

@@ -9,7 +9,7 @@ var kosmtik = require('./cmd-start-kosmtik.js')
 var exportTiles = require('./cmd-export-tiles.js') 
 var serve = require('./cmd-serve.js') 
 var demo = require('./cmd-demo.js') 
-//var update = require('./cmd-update.js') 
+var update = require('./cmd-update.js') 
 var g = {}
 
 var nconf = require('nconf')
@@ -120,7 +120,7 @@ if (command === 'init') {
 } else if (command === 'demo') {
   demo(nconf)
 } else if (command === 'update') {
-  //update(nconf)
+  update(nconf)
 } else {
   yargs.showHelp()
 }

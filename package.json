@@ -17,6 +17,7 @@
     "geojson-bbox": "0.0.0",
     "geojson2poly": "0.0.2",
     "http-server": "^0.9.0",
+    "jsonfile": "^2.4.0",
     "mkdirp": "^0.5.1",
     "nconf": "^0.8.4",
     "osm-tile-list": "0.0.7",
@@ -25,6 +26,7 @@
     "requestretry": "^1.12.0",
     "simplify-geojson": "^1.0.3",
     "sphericalmercator": "^1.0.5",
+    "touch": "^1.0.0",
     "username": "^2.2.2",
     "yargs": "^6.0.0"
   }

@@ -21,7 +21,11 @@
   "export": {
     "tileServerURL": "http://127.0.0.1:6789/openstreetmap-carto/tile",
     "dir": "map-tiles",
-    "tileList": "final-tile-list.txt"
+    "tileList": "final-tile-list.txt",
+    "worldMinZoom": 0,
+    "worldMaxZoom": 5,
+    "myAreaMinZoom": 6,
+    "myAreaMaxZoom": 15
   },
   "tileServer": {
     "dir": "map-tiles",
