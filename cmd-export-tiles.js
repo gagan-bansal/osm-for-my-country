@@ -4,12 +4,13 @@ var mkdirp = require('mkdirp')
 var request = require('request')
 var async = require('async')
 
-var reqSend = 0, reqReceived = 0
+var totalReq, reqSend = 0, reqReceived = 0
 
 module.exports = function(url, tileList, dir) {
   fs.readFile(tileList, 'utf8', function(err, data) {
     if (err) throw err
     var tiles = data.split('\n')
+    totalReq = tiles.length
     tiles.pop()
     async.eachOfLimit(tiles,20, function(tile, index, callback) {
       reqSend++
@@ -42,8 +43,8 @@ module.exports = function(url, tileList, dir) {
   var lastReqReceived = 0
   var timerId = setInterval(function() {
   
-    console.log('Status - reqSend: %s, reqReceived: %s, throughput: %s', 
-      reqSend, reqReceived, (reqReceived - lastReqReceived))
+    console.log('Status - peding requests: %s, throughput: %s', 
+      totalReq - reqReceived, reqReceived - lastReqReceived)
     lastReqReceived = reqReceived
     if (isAllDone) {
       clearInterval(timerId)

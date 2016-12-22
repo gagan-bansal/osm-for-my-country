@@ -8,11 +8,15 @@ var concat = require('concat-files')
 var path = require('path')
 var requestretry = require('requestretry')
 var exec = require('child_process').exec
-var exportTiles = require('./cmd-export.js')
-var config
+var exportTiles = require('./cmd-export-tiles.js')
+var g = {}
 
 module.exports = function(nconf) {
-  config = nconf
+  g.config = nconf
+  g.memory = parseInt(
+    os.totalmem() * (g.config.get('system:memoryPercentage')/100)/1000000)
+  g.seqFile = path.resolve(g.config.get('data:dir'),'seq-number.json')
+
   async.parallel([
     readLastSeq,
     getCurSeq 
@@ -25,17 +29,19 @@ module.exports = function(nconf) {
     } else {
       var pending = Array.apply(null, Array(cur - last))
         .map(function(e,i) {return this + i +1},last)
+      console.log('pending ' + JSON.stringify(pending))
       // create empty tile list
       fs.closeSync(fs.openSync(
-        path.resolve(config.get('data:dir'), 'tiles-to-update.txt'), 'w'
+        path.resolve(g.config.get('data:dir'), 'tiles-to-update.txt'), 'w'
       ))
-      async.each(pending, updateData, function(err) {
+      async.eachSeries(pending, updateData, function(err) {
         if (err) throw err
         async.series([
           concatTileList.bind({list: pending}),
-          exportTiles
+          exportUpdate
         ], function(err) {
-          fs.writeFile(seqFile, JSON.stringify({sequenceNumber: seq}), 
+          if (err) throw err
+          fs.writeFile(g.seqFile, JSON.stringify({sequenceNumber: cur}), 
             function(err) {
               if (err) throw err
               console.log('Map data updated to sequenceNumber: ' 
@@ -58,8 +64,7 @@ function updateData(seq, callback) {
   })
 }
 function readLastSeq(callback) {
-  var seqFile = path.resolve(config.get('data:dir'),'seq-number.json')
-  jsonfile.readFile(seqFile, function(err, json) {
+  jsonfile.readFile(g.seqFile, function(err, json) {
     if (err) callback(err)
     callback(null, json.sequenceNumber)
   })
@@ -67,8 +72,8 @@ function readLastSeq(callback) {
 
 function getCurSeq(callback) {
   console.log('Getting current state of data ...')
-  var url = config.get('osm:host') + '/'
-    + config.get('osm').region.split(',')
+  var url = g.config.get('osm:host') + '/'
+    + g.config.get('osm').region.split(',')
       .map(function(part) {
         return part.toLowerCase().trim().replace(/ +/g, '-')
       })
@@ -103,8 +108,8 @@ function getCurSeq(callback) {
 
 function downloadData(callback2) {
   var curPath = (1000000000 + this.seq).toFixed().slice(1).match(/.{1,3}/g).join('/')
-  var url = config.get('osm:host') + '/'
-    + config.get('osm').region.split(',')
+  var url = g.config.get('osm:host') + '/'
+    + g.config.get('osm').region.split(',')
       .map(function(part) {
         return part.toLowerCase().trim().replace(/ +/g, '-')
       })
@@ -124,7 +129,7 @@ function downloadData(callback2) {
   console.log('curl: '+ curl)
   exec(
     curl, 
-    {cwd: path.resolve(config.get('data:dir'))},
+    {cwd: path.resolve(g.config.get('data:dir'))},
     function(err, stdout, stderr) {
       if (err) throw err
       console.log(stdout)
@@ -142,27 +147,31 @@ function downloadData(callback2) {
 
 
 function osm2pgsql(callback2) {
-  var input = path.resolve(config.get('data:dir'), this.seq + '.osc.gz')
-  var tileList = path.resolve(config.get('data:dir'), 'tiles-to-update.txt')
-  var style = path.resolve(config.get('map:cartoDir'),
-    config.get('map:cartoStyle'))
+  var input = path.resolve(g.config.get('data:dir'), this.seq + '.osc.gz')
+  var tileList = path.resolve(g.config.get('data:dir'), 'tiles-to-update.txt')
+  var outputList = path.resolve(g.config.get('data:dir'), this.seq + '-tiles-to-update.txt')
+  var style = path.resolve(g.config.get('map:cartoDir'),
+    g.config.get('map:cartoStyle'))
   console.log('osm2pgsql running ...')
-  console.log(['osm2pgsql', 
-    '--append', '--slim', '--cache', parseInt(os.totalmem()*0.75/1000000),
+  console.log(['osm2pgsql',
+    '--append', '--slim', '--cache', g.memory,
     '--number-processes', os.cpus().length,
     '--hstore',
     '--style', style,
     input,
-    '&> /dev/null'].join(' '))
-/*  var cmd = spawn('osm2pgsql', [
-    '--create', '--slim', '--cache', parseInt(os.totalmem()*0.75/1000000),
-    '--number-processes', os.cpus().length,
-    '--hstore',
-    '--style', style,
-    input,
-    '--expire-tiles', config.get('export:myAreaMinZoom') + '-' 
-      + config.get('export:myAreaMaxZoom'),
+    '--expire-tiles', g.config.get('export:myAreaMinZoom') + '-' 
+      + g.config.get('export:myAreaMaxZoom'),
     '--expire-output', this.seq + '-tiles-to-update.txt' 
+  ].join(' '))
+  var cmd = spawn('osm2pgsql', [
+    '--append', '--slim', '--cache', g.memory,
+    '--number-processes', os.cpus().length,
+    '--hstore',
+    '--style', style,
+    input,
+    '--expire-tiles', g.config.get('export:myAreaMinZoom') + '-' 
+      + g.config.get('export:myAreaMaxZoom'),
+    '--expire-output', outputList 
   ])
   cmd.on('error', function(err) {
     callback2(err)
@@ -178,18 +187,16 @@ function osm2pgsql(callback2) {
     console.log('osm2pgsql completed')
     callback2(null)
   })
-*/
-callback2() 
 }
 
 function concatTileList(callback) {
   var fileList = this.list.map(function(f) {
-    return path.resolve(config.get('data:dir'), f)
+    return path.resolve(g.config.get('data:dir'), f + '-tiles-to-update.txt')
   })
-  var combList = path.resovle(config.get('data:dir'), 'combined-list.txt')
+  var combList = path.resolve(g.config.get('data:dir'), 'combined-list.txt')
   concat(fileList, combList, function(err) {
-    if (err) callback(err)
-    var output = path.resovle(config.get('data:dir'), 'tiles-to-update.txt')
+    if (err) return callback(err)
+    var output = path.resolve(g.config.get('data:dir'), 'tiles-to-update.txt')
     exec('sort ' + combList + ' | uniq > ' + output, 
       function(err, stderr, stdout) {
         if (err || stderr) callback(err || stderr)
@@ -200,12 +207,9 @@ function concatTileList(callback) {
 }
 
 function exportUpdate() {
-  var url = nconf.get('export').tileServerURL
-  var tileList = path.resovle(config.get('data:dir'), 'tiles-to-update.txt')
-  var dir = path.resolve(config.get('export:dir'))
-  
+  var url = g.config.get('export').tileServerURL
+  var tileList = path.resolve(g.config.get('data:dir'), 'tiles-to-update.txt')
+  var dir = path.resolve(g.config.get('export:dir'))
   console.log(url, tileList, dir)
-   
   exportTiles(url, tileList, dir)
-  
 }

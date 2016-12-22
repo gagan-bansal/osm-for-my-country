@@ -17,7 +17,7 @@ var config;
 module.exports = function(nconf) {
   config = nconf
   async.series([
-    createDirs,
+    init,
     parseRegion,
     downloadMyCountryData,
     writeCurState,
@@ -41,7 +41,9 @@ module.exports = function(nconf) {
   })
 }
 
-function createDirs(callback) {
+function init(callback) {
+  g.memory = parseInt(
+    os.totalmem() * (config.get('system:memoryPercentage')/100)/1000000)
   var confFile = config.stores.file.store
   Object.keys(confFile).forEach(function(key) {
     if (confFile[key].dir) mkdirp.sync(confFile[key].dir, function(err) {
@@ -152,7 +154,7 @@ function pbf2osm(callback) {
   var output = path.resolve(config.get('data:dir'),
     'my-area.osm')
   execFile(cmd, [
-    '--hash-memory=' + parseInt(os.totalmem()*0.75/1000000),
+    '--hash-memory=' + g.memory,
     input,
     '--out-osm', '-o=' + output
   ],
@@ -260,7 +262,7 @@ function osm2geojson(callback) {
   var output = path.resolve(config.get('data:dir'),
     'my-area-border.geojson')
   exec('node '
-     + ' --max_old_space_size=' + parseInt(os.totalmem()*0.75/1000000)
+     + ' --max_old_space_size=' + g.memory
      + ' ' + cmd
      + ' ' + input
      + ' > ' + output
@@ -365,7 +367,7 @@ function mergeOSMData(callback) {
     'my-area-final-data.osm')
 
   execFile('./osmconvert', [
-    '--hash-memory=' + parseInt(os.totalmem()*0.75/1000000),
+    '--hash-memory=' + g.memory,
     input1, input2,
     '--out-osm', '-o='+ outFile
   ],
@@ -380,14 +382,14 @@ function osm2pgsql(callback) {
     config.get('map:cartoStyle'))
   console.log('osm2pgsql running ...')
   console.log(['osm2pgsql',
-    '--create', '--slim', '--cache', parseInt(os.totalmem()*0.75/1000000),
+    '--create', '--slim', '--cache', g.memory,
     '--number-processes', os.cpus().length,
     '--hstore',
     '--style', style,
     input,
     '&> /dev/null'].join(' '))
   var cmd = spawn('osm2pgsql', [
-    '--create', '--slim', '--cache', parseInt(os.totalmem()*0.75/1000000),
+    '--create', '--slim', '--cache', g.memory,
     '--number-processes', os.cpus().length,
     '--hstore',
     '--style', style,

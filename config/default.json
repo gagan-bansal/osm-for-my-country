@@ -1,7 +1,6 @@
 {
   "osm": {
-    "host": "http://download.geofabrik.de",
-    "region": "Asia, Nepal"
+    "host": "http://download.geofabrik.de"
   },
   "data": {
     "dir": "data"
@@ -36,5 +35,8 @@
     "port": 4141,
     "width": 600,
     "height": 400
+  },
+  "system": {
+    "memoryPercentage": 70
   }
 }
