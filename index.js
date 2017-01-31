@@ -73,7 +73,7 @@ if (command === 'init') {
   }
 } else if (command === 'export') {
   yargs.reset()
-    .usage('\nUsage: $0 export -u [str] -t [str] -o [str]'
+    .usage('\nUsage:node $0 export -u [str] -t [str] -o [str]'
       + '\nby default all these options are read from \'./config/default.json\''
     )
     .options({ 
@@ -114,6 +114,12 @@ if (command === 'init') {
    
   exportTiles(url, tileList, dir)
 } else if (command === 'start-kosmtik') {
+  yargs.reset()
+    .usage('\nUsage: node $0 start-kosmtik'
+      + '\nYou can preview your map at http://127.0.0.1:6789/')
+    .help('h')
+    .alias('h', 'help')
+
   kosmtik(nconf)
 } else if (command === 'serve') {
   serve(nconf)

@@ -69,7 +69,7 @@ echo "Installing http-server ..."
 npm install http-server -g
 
 echo "Installing kosmtik ..."
-git clone --branch 0.0.13 https://github.com/kosmtik/kosmtik.git
+git clone --branch 0.0.13-png8 https://github.com/gagan-bansal/kosmtik.git
 cd kosmtik
 # as mapnik ^3.5.13 is using GLIBCXX_3.4.20 or above
 # check the OS version by `strings /lib64/libstdc++.so.6 | grep 'GLIBCXX'`
