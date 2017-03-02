@@ -16,67 +16,48 @@ var nconf = require('nconf')
   .argv()
   .file({file: './config/default.json'})
 
-var yargs = require('yargs')
-  .usage('\nUsage: node $0 command')
+require('yargs')
+  .usage('\nUsage: node $0 <command> [options]'
+    + '\n\nFor command help:'
+    + '\nnode $0 <command> --help'
+  )
+  .option({
+    's': {
+      alias: 'save',
+      desc: 'save parameters to config file',
+      type: 'boolean',
+      default: true
+    }
+  })
   .command(
     'init', 
     'Initiate the data by downloading and inserting into postgres'
-      + '\nand many more things')
-  .command('start-kosmtik', 
-    'Start kosmtik server with mapnik as map rendering engine')
-  .command('export', 'Export map tiles')
-  .command('serve', 'Serve map tiles at http port')
-  .command('demo', 'Privew map tiles with help of Leaflet')
-  .command('update', 'Update the OSM data and map tiles based on daily update.')
-  .demand(1, 'must provide a valid command')
-var argv= yargs.argv
-var command = argv._[0] 
-
-if (command === 'init') {
-  yargs.reset()
-    .usage('Usage:node $0 init [options]'
-      + '\n\nExamples: '
-      + '\n  node $0 init --region \'asia,sri lanka\'')
-    .options({
+      + '\nand many more things', 
+    {
       'r': {
         alias: 'region',
-        describe: 'Region to download with complete path',
+        describe: 'Region to download with complete path as per GEOFABRIK'
+          + '\nlike: --region \'Asia, Nepal\'',
         type: 'string'
       },
-      'save': {
-        desc: 'save parameters to config file',
-        type: 'boolean',
-        default: true
-      }
-    })
-    /*.coerce('region', function(val) {
-      nconf.set('osm:region', val)  
-      return val.split(',')
-        .map(function(part) {
-          return part.trim()
-        })
-    })*/
-    .help('h')
-    .alias('h', 'help')
-  
-  if (yargs.argv.region) {
-    nconf.set('osm:region', yargs.argv.region)
-  }
-  if (nconf.get('osm:region')) {
-    init(nconf)
-  } else {
-    yargs.argv.save = false
-    console.error(
-      '\nregion not specified and could not read from config file also\n')
-    yargs.showHelp() 
-    return
-  }
-} else if (command === 'export') {
-  yargs.reset()
-    .usage('\nUsage:node $0 export -u [str] -t [str] -o [str]'
-      + '\nby default all these options are read from \'./config/default.json\''
-    )
-    .options({ 
+    },
+    handleInit
+  )
+  .command('start-kosmtik', 
+    'Start kosmtik server with mapnik as map rendering engine'
+      + '\nAt this stage you can preview map with ksomtik'
+      + ' at http://127.0.0.1:6789/'
+      + '\n You can make changes in CartoCSS and preview immediately.',
+    {},
+    function(argv) {
+      kosmtik(nconf)
+      saveToConfig(argv)
+    }
+  )
+  .command('export', 
+    'Export map tiles'
+      + '\nBy default all the options are read from \'./config/default.json\'',
+    { 
       'u': {
         alias: 'tileServerURL',
         describe: 'base url serving map tile',
@@ -91,49 +72,75 @@ if (command === 'init') {
         alias: 'dir',
         desc: 'output tile directory',
         type: 'string'
-      },
-      'save': {
-        desc: 'save parameters to config file',
-        type: 'boolean',
-        default: false
       }
-    })
-    .help('h')
-    .alias('h', 'help')
-    .argv
-  
-  if (yargs.argv.u) nconf.set('exprot:tileServerURL', argv.u)
-  if (yargs.argv.t) nconf.set('export:tileList', argv.t)
-  if (yargs.argv.o) nconf.set('export:dir', argv.o)  
+    },
+    handleExport
+  )
+  .command('serve',
+    'Serve map tiles at http'
+      + '\nThis will enable map tiles to be served at '
+      + 'http://127.0.0.1:'+nconf.get('tileServer:port')+'/$z/$x/$y.png',
+    {},
+    function(argv) {
+      serve(nconf)
+      saveToConfig(argv)
+    }
+  )
+  .command('demo', 
+    'Privew map tiles with help of Leaflet'
+      + '\nCheck your map at '
+      + 'http://127.0.0.1:'+nconf.get('demo:port')+'/',
+    {},
+    function(argv) {
+      demo(nconf)
+      saveToConfig(argv)
+    }
+  )
+  .command('update', 
+    'Update the OSM data and map tiles based on daily update from GEOFABRIK.'
+      + '\n You can set this command in your cron job to update on daily basis.',
+    {},
+    function(argv) {
+      update(nconf)
+      saveToConfig(argv)
+    }
+  )
+  .demandCommand(1, 'must provide a valid command')
+  .help()
+  .alias('h', 'help')
+  .argv
+
+function handleInit(argv) {
+  if (argv.region) {
+    nconf.set('osm:region', argv.region)
+  }
+  if (nconf.get('osm:region')) {
+    init(nconf)
+    saveToConfig(argv)
+  } else {
+    argv.save = false
+    console.error(
+      '\nregion not specified and could not read from config file also\n')
+    throw new Error()
+  }
+}
+
+function handleExport(argv) {
+  if (argv.u) nconf.set('exprot:tileServerURL', argv.u)
+  if (argv.t) nconf.set('export:tileList', argv.t)
+  if (argv.o) nconf.set('export:dir', argv.o)  
   
   var url = nconf.get('export').tileServerURL
   var tileList = path.resolve(nconf.get('data').dir,nconf.get('export').tileList)
   var dir = path.resolve(nconf.get('export').dir)
-  
-  console.log(url, tileList, dir)
    
   exportTiles(url, tileList, dir)
-} else if (command === 'start-kosmtik') {
-  yargs.reset()
-    .usage('\nUsage: node $0 start-kosmtik'
-      + '\nYou can preview your map at http://127.0.0.1:6789/')
-    .help('h')
-    .alias('h', 'help')
-
-  kosmtik(nconf)
-} else if (command === 'serve') {
-  serve(nconf)
-} else if (command === 'demo') {
-  demo(nconf)
-} else if (command === 'update') {
-  update(nconf)
-} else {
-  yargs.showHelp()
+  saveToConfig(argv)
 }
 
-console.log('\nUsing config file: \'./config/default.json\'\n')
-
-  if (yargs.argv.save) {
+function saveToConfig(argv) {
+  console.log('\nUsing config file: \'./config/default.json\'\n')
+  if (argv.save) {
     nconf.save(function (err) {
       fs.readFile('./config/default.json', function (err, data) {
         //console.dir(JSON.parse(data.toString()))
@@ -142,4 +149,4 @@ console.log('\nUsing config file: \'./config/default.json\'\n')
       })
     })
   }
-
+}

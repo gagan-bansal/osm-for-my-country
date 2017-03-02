@@ -24,20 +24,129 @@ How does this project work? Basic flow is
 Now the map can be previewed (command: **demo**). You can also easily update OpenStreetMap data and map tiles with single command with daily updates from [geofabrik][2] with single command(command: **update**). It's nice to keep update command as cron job.
 
 Here are the required commands:
- 
+
 ```
-Usage: node index.js command
+node index.js --help
+```
+```
+Usage: node index.js <command> [options]
+
+For command help:
+node index-dev.js <command> --help
 
 Commands:
   init           Initiate the data by downloading and inserting into postgres
                  and many more things
   start-kosmtik  Start kosmtik server with mapnik as map rendering engine
+                 At this stage you can preview map with ksomtik at
+                 http://127.0.0.1:6789/
+                 You can make changes in CartoCSS and preview immediately.
   export         Export map tiles
-  serve          Serve map tiles at http port
+                 By default all the options are read from
+                 './config/default.json'
+  serve          Serve map tiles at http
+                 This will enable map tiles to be served at
+                 http://127.0.0.1:4040/$z/$x/$y.png
   demo           Privew map tiles with help of Leaflet
-  update         Update the OSM data and map tiles based on daily update.
+                 Check your map at http://127.0.0.1:4141/
+  update         Update the OSM data and map tiles based on daily update from
+                 GEOFABRIK.
+                 You can set this command in your cron job to update on daily
+                 basis.
+
+Options:
+  -s, --save  save parameters to config file           [boolean] [default: true]
+  -h, --help  Show help                                                [boolean]
 
 ```
+#### init 
+```
+node index.js init --help
+```
+
+```
+Usage:node index.js init [options]
+
+Examples:
+  node index.js init --region 'Asia, Nepal'
+
+Options:
+  -r, --region  Region to download with complete path as per GEOFABRIK
+                like: --region 'Asia, Nepal'                            [string]
+  -h, --help    Show help                                              [boolean]
+
+``` 
+#### start-kosmtik
+```
+node index.js start-kosmtik --help
+```
+
+```
+Usage: node index.js start-kosmtik
+You can preview your map at http://127.0.0.1:6789/
+
+Options:
+  -h, --help  Show help                                                [boolean]
+```
+
+#### export
+```
+node index.js export --help
+```
+
+```
+Usage:node index.js export -u [str] -t [str] -o [str]
+by default all these options are read from './config/default.json'
+
+Options:
+  -u, --tileServerURL  base url serving map tile                        [string]
+  -t, --tileList       a file for tiles list                            [string]
+  -o, --dir            output tile directory                            [string]
+  -h, --help           Show help                                       [boolean]
+```
+
+#### serve
+```
+node index.js serve --help
+```
+
+```
+Usage: node index.js serve
+  Serve map tiles at http
+  This will enable map tiles to be served at http://127.0.0.1:4040/$z/$x/$y.png
+
+Options:
+  -h, --help  Show help                                                [boolean]
+```
+
+#### demo
+```
+node index.js demo --help
+```
+
+```
+Usage: node index.js demo
+  Privew map tiles with help of Leaflet
+  Check your map at http://127.0.0.1:4141/
+
+Options:
+  -h, --help  Show help                                                [boolean]
+```
+
+#### update
+```
+node index.js update --help
+```
+
+```
+Usage: node index.js update
+  Update the OSM data and map tiles based on daily update from GEOFABRIK
+  You can set this command in your cron job to update on daily basis
+
+Options:
+  -h, --help  Show help                                                [boolean]
+```
+
 Please go through [config/defualt.json](config/defualt.json) to change different project options. Recommended system is 4 core with 8GB memory otherwise in config/default.json please change `HASH_MEMORY` and `NUM_PROCESS` accordingly.
 
 ## TODO
