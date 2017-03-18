@@ -147,7 +147,7 @@ Options:
   -h, --help  Show help                                                [boolean]
 ```
 
-Please go through [config/defualt.json](config/defualt.json) to change different project options. Recommended system is 4 core with 8GB memory otherwise in config/default.json please change `HASH_MEMORY` and `NUM_PROCESS` accordingly.
+Please go through [config/defualt.json](config/defualt.json) to change different project options. Recommended minimum system required is 4 core with 8GB memory.
 
 ## TODO
   - skip installation if package is already installed
