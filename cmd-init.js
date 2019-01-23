@@ -382,14 +382,14 @@ function osm2pgsql(callback) {
     config.get('map:cartoStyle'))
   console.log('osm2pgsql running ...')
   console.log(['osm2pgsql',
-    '--create', '--slim', '--cache', g.memory,
+    '--create', '-d gis', '--slim', '--cache', g.memory,
     '--number-processes', os.cpus().length,
     '--hstore',
     '--style', style,
     input,
     '&> /dev/null'].join(' '))
   var cmd = spawn('osm2pgsql', [
-    '--create', '--slim', '--cache', g.memory,
+    '--create', '-d gis', '--slim', '--cache', g.memory,
     '--number-processes', os.cpus().length,
     '--hstore',
     '--style', style,
