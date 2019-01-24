@@ -5,6 +5,7 @@ This project is stack of many libraries and framework stitched together to creat
 
 Main libraries, packages, data sources and framework those are part of this project are: OpenStreetMap data from [Overpass API][1] and [geofabrik][2], [osm2pgsql][3], [PostgreSQL][4] with [PostGIS][5], OpenStreetMap tools [osmconvert][6] and [osmfilter][7], [node.js][8] using [nvm][9], [pm2][10], [http-server][11], main mapping framework [Kosmtik][12] that is developed on [Mapnik][13] node.js bindings, [CartoCSS][15] based map style framework [openstreetmap-carto][14], [Google Noto Fonts][16] and many OpenStreetMap data related node.js modules [geosjon2poly][17], [osm-tile-list][18], [osmtogeojson][19], [simplify-geojson][20], [sphericalmercator][21].
   
+Consider this project as a boilerplate. You can learn all the components of a OSM project: map rendering, caching the tiles, updaating the OSM data and serving map tiles.
 
 ## Installation
 All the above mentioned packages would be installed with single scripts. 
