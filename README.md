@@ -7,7 +7,12 @@ Main libraries, packages, data sources and framework those are part of this proj
   
 Consider this project as a boilerplate. You can learn all the components of a OSM project: map rendering, caching the tiles, updaating the OSM data and serving map tiles.
 
+### Dependency
+
+`python` command is required on shell prompt. If using `python3` create alias `python` for `python3`. 
+
 ## Installation
+
 All the above mentioned packages would be installed with single scripts. 
 ```
 git clone https://github.com/gagan-bansal/osm-for-my-country.git
