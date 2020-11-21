@@ -1,4 +1,7 @@
 ## osm-for-my-country
+
+**Note: This is a boilerplate combining many packages related to OSM.**
+
 You are working on a project that require map of your country and don't have much time to understand the OpenStreetMap data and map creation with it. Don't worry here is a completely automated solution to create OpenStreetMap map tiles of your region.
 
 This project is stack of many libraries and framework stitched together to create map tiles of your region. You just specify the country name and required data is downloaded through scripts from different sources. Even all the dependent software modules and libraries are also installed in a single go. You only need a plain Linux machine. 
