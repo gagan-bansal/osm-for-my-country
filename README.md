@@ -22,7 +22,7 @@ git clone https://github.com/gagan-bansal/osm-for-my-country.git
 cd osm-for-my-country
 bash install.sh
 ```
-Please go through `isntall.sh` to see what all the packages are being installed. 
+Please go through `install.sh` to see what all the packages are being installed. 
 
 ## Usage
 How does this project work? Basic flow is 
