@@ -23,7 +23,7 @@
     "osm-tile-list": "0.0.7",
     "osmtogeojson": "^2.2.12",
     "request": "^2.75.0",
-    "requestretry": "^1.12.0",
+    "requestretry": "^7.0.0",
     "simplify-geojson": "^1.0.3",
     "sphericalmercator": "^1.0.5",
     "touch": "^1.0.0",
