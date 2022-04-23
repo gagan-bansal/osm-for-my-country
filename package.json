@@ -19,7 +19,7 @@
     "http-server": "^0.9.0",
     "jsonfile": "^2.4.0",
     "mkdirp": "^0.5.1",
-    "nconf": "^0.8.4",
+    "nconf": "^0.11.4",
     "osm-tile-list": "0.0.7",
     "osmtogeojson": "^2.2.12",
     "request": "^2.75.0",
