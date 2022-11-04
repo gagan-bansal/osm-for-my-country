@@ -27,7 +27,7 @@
     "simplify-geojson": "^1.0.3",
     "sphericalmercator": "^1.0.5",
     "touch": "^1.0.0",
-    "username": "^2.2.2",
+    "username": "^6.0.0",
     "yargs": "^6.6.0"
   }
 }
