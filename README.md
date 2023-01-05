@@ -28,7 +28,7 @@ Please go through `install.sh` to see what all the packages are being installed.
 How does this project work? Basic flow is 
   - after installation first data is downloaded and processed for the country name you specify (command: **init**)
   - a map rendering engine is started (command: **start-kosmtik**)
-  - all the map tiles are exported. Why all, can't we render dynamically and serve? No, idea of this project is to create a complete map cache then you can server map tiles with simple http server or even s3. With this stack you can achieve similar to [Mspbox export][22] (command: **export**)
+  - all the map tiles are exported. Why all, can't we render dynamically and serve? No, idea of this project is to create a complete map cache then you can server map tiles with simple http server or even s3. With this stack you can achieve similar to [Mapbox export][22] (command: **export**)
   - exported map tiles are served with light weight [http-server][11] (command: **serve**)
 Now the map can be previewed (command: **demo**). You can also easily update OpenStreetMap data and map tiles with single command with daily updates from [geofabrik][2] with single command(command: **update**). It's nice to keep update command as cron job.
 
